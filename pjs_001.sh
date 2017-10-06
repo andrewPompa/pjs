@@ -4,7 +4,7 @@
 usage() {
   echo "Wyswietla informacje o obecnym uzytkowniku"
   echo "Uzycie"
-  echo "pjs_jazowski_001.sh"
+  echo "$0"
   echo "-h | --help Wyswietl pomoc"
   echo "-q | --quiet Tryb cichy"
 }
@@ -51,7 +51,6 @@ validate_usage() {
   fi
 
 }
-
 get_and_show_user_info() {
   # pierwsza znaleziona metoda, ale nie zawsze jest zainstalowana
   # finger -l "$USER" | grep -e Name:

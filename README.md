@@ -3,8 +3,12 @@ Zadania na Pracownię Języków Skryptowych
 ### Założenia ogólne:
 + skrypt zawsze opisuje co robi **-h, --help**
 ## ETAP 1 - Powłoki
-Skrypt wyświetla informacje o użytkowniku: jego imię i nazwisko, jeżeli taka informacja nie istnieje wyświetla jego login
-+ -h, --help jest to parametr o najwyższym priorytecie
-    Kiedy będzie syf i -h wyświetla informacje i exit 1
-    Kiedy będzie -h i -q lub samo -h  wyświetla informacje i exit 0
+### Zadanie 001
+Skrypt wyświetla informacje o użytkowniku: jego login, imię i nazwisko, jeżeli taka informacja nie istnieje wyświetla jego login
++ Bez opcji - normalne działanie
++ -h, --help jest to parametr o najwyższym priorytecie: wyświetla informacje i kończy z kodem 0
 + -q, --quiet tryb cichy: parametr o mniejszym priorytecie *Nie rób nic*
++ każda inna opcja - dodanie komentarza *Niezrozumiale polecenie* i pomocy. Zakończenie działania z kodem 1.
++ - wywołanie z argumentem nie mającym wyglądu opcji jest ignorowane w tym
+sensie, że program działa tak jakby był wywołany bez żadnych argumentów czy
+opcji i kończy działanie z kodem błędu 0.

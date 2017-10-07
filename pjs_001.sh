@@ -2,7 +2,7 @@
 #jazowski_michal grupa 2
 
 usage() {
-  echo "Wyswietla informacje o obecnym uzytkowniku - login: Imie i Nazwisko"
+  echo "Wyswietla informacje o obecnym uzytkowniku - login : Imie i Nazwisko"
   echo "Uzycie"
   echo "$0"
   echo "-h | --help Wyswietl pomoc"
@@ -22,7 +22,7 @@ validate_usage() {
       is_help=true
     elif [ $1 == -q ] || [ $1 == --quiet ]; then
       is_quiet=true
-    elif [[ $1 == -* ]] || [[ $1 == --* ]]; then
+    elif [[ $1 == -* ]]; then
       is_rubbish=true
     fi
     shift
@@ -49,7 +49,7 @@ get_and_show_user_info() {
     echo $USER
     exit 0
   fi
-  echo "$USER: $user_name"
+  echo "$USER : $user_name"
 }
 #=========
 validate_usage $@

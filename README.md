@@ -12,3 +12,9 @@ Skrypt wyświetla informacje o użytkowniku: jego login, imię i nazwisko, jeże
 + - wywołanie z argumentem nie mającym wyglądu opcji jest ignorowane w tym
 sensie, że program działa tak jakby był wywołany bez żadnych argumentów czy
 opcji i kończy działanie z kodem błędu 0.
+### Zadanie 002
+#### 002
++ stderr - niepoprwany argument to co podał user, schodzę z kodem błędu 1
++ 003 - nieznany mi operator, lista obslugiwanych operatorow
+jezeli cos jest nieosiagalne to *N/A*
+Zamienić operatorów na literki

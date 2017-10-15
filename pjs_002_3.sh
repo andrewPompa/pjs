@@ -104,13 +104,13 @@ do_mathematical_operation() {
     if [[ $2 -eq 0 ]]; then
       echo "N/A"
     else
-      echo $(bc <<< "scale=2;$1/$2")
+      echo $(bc <<< "scale=5;$1/$2")
     fi
   elif [[ $3 == $POWER ]]; then
     if [[ $1 -eq 0 ]] && [[ $2 -lt 0 ]]; then
       echo "N/A"
     else
-      echo $(bc <<< "scale=2;$1^$2")
+      echo $(bc <<< "scale=5;$1^$2")
     fi
   fi
 }
@@ -122,8 +122,5 @@ validate_numbers $1 $3
 num_1=$(get_number $1)
 num_2=$(get_number $3)
 validate_operator $2
-echo $num_1
-echo $num_2
 operator=$(get_operator $2)
-echo $operator
 draw_table_and_do_mathematical_operation $num_1 $num_2 $operator

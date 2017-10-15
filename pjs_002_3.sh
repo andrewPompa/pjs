@@ -57,32 +57,32 @@ get_number() {
   echo $number
 }
 draw_table_and_do_mathematical_operation() {
-  local vals=($(seq $1 $STEP $2))
-  echo ${#vals[@]}
+  local vals=($(seq $1 $STEP_FORWARD $2))
+  # echo ${#vals[@]}
 
-  for((k=0; k<${#vals[@]}; k++)) {
-    echo ${vals[$k]}
-  }
+  # for((k=0; k<${#vals[@]}; k++)) {
+  # echo ${vals[$k]}
+  # }
   # printf "%s\n" "${vals[@]}"
 
-  local starting_number=$1
-  local ending_number=$2
   if [ "$1" -gt "$2" ]; then
-    starting_number=$2
-    ending_number=$1
+    vals=($(seq $1 $STEP_BACKWORD $2))
   fi
-  # echo "zaczynam od: $starting_number"
+  local vals_length=${#vals[@]}
+
   local first_line=$(echo -e \\)
-  for ((i=$starting_number; i<=$ending_number; i++)); do
-    first_line+=$(echo -e "\t$i")
+  # If subscript is @ or *, the word expands to all members of name.
+  # By prefixing # to variable you will find length of an array
+  for ((i=0; i<=$vals_length; i++)); do
+    first_line+=$(echo -e "| ${vals[$i]} ")
   done
   echo $first_line
 
   local line
-  for ((i=$starting_number; i<=$ending_number; i++)); do
-    local line=$(echo "$i ")
-    for ((j=$starting_number; j<=$ending_number; j++)); do
-      local result=$(do_mathematical_operation $i $j $3)
+  for ((i=0; i<$vals_length; i++)); do
+    local line=$(echo "${vals[$i]}|")
+    for ((j=0; j<$vals_length; j++)); do
+      local result=$(do_mathematical_operation ${vals[$i]} ${vals[$j]} $3)
       line+=$(echo "$result ")
     done
     echo $line
@@ -102,7 +102,11 @@ do_mathematical_operation() {
       echo $(( $1 / $2 ))
     fi
   elif [[ $3 == $POWER ]]; then
-    echo $("$1^$2" | bc)
+    if [[ $1 -eq 0 ]] && [[ $2 -lt 0 ]]; then
+      echo "N/A"
+    else
+      echo $(bc <<< "scale=2;$1^$2")
+    fi
   fi
 }
 

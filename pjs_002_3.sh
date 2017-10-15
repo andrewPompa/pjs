@@ -46,24 +46,11 @@ get_operator() {
   fi
 }
 get_number() {
-  # local number_without_zero=$1
-  # if [ $1 -gt 0 ]; then
-  # echo "wieksze"
-  # else
-  # echo "mniejsze"
-  # fi
-  # $(echo $1 | grep -oe [1-9][0-9]*)
   local number=$(echo $1 | cut -d + -f 2 |  cut -d . -f 1)
   echo $number
 }
 draw_table_and_do_mathematical_operation() {
   local vals=($(seq $1 $STEP_FORWARD $2))
-  # echo ${#vals[@]}
-
-  # for((k=0; k<${#vals[@]}; k++)) {
-  # echo ${vals[$k]}
-  # }
-  # printf "%s\n" "${vals[@]}"
 
   if [ "$1" -gt "$2" ]; then
     vals=($(seq $1 $STEP_BACKWORD $2))
@@ -99,7 +86,7 @@ do_mathematical_operation() {
     if [[ $2 -eq 0 ]]; then
       echo "N/A"
     else
-      echo $(( $1 / $2 ))
+      echo $(bc <<< "scale=2;$1/$2")
     fi
   elif [[ $3 == $POWER ]]; then
     if [[ $1 -eq 0 ]] && [[ $2 -lt 0 ]]; then
@@ -109,9 +96,9 @@ do_mathematical_operation() {
     fi
   fi
 }
-
+# #################################
 # executions
-#usage
+# #################################
 validate_numbers $1 $3
 num_1=$(get_number $1)
 num_2=$(get_number $3)

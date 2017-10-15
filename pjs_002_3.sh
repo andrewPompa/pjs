@@ -15,13 +15,27 @@ usage() {
   echo "Uzycie"
   echo "$0 n1 o n2"
   echo "n1 n2 - liczby calkowite"
-  echo "o - operator mozliwy w formacie:"
+  echo "o - operator matematyczny, mozliwe opcje:"
   echo " $ADD - dodawanie"
   echo " $SUBTRACT - odejmowanie"
   echo " $MULTIPLIY - mnozenie"
   echo " $DIVIDE - dzielenie"
   echo " $POWER - potegowanie"
 }
+validate_usage() {
+  local is_help=false
+  while test $# -gt 0; do
+    if [ $1 == -h ] || [ $1 == --help ]; then
+      is_help=true
+    fi
+    shift
+  done
+  if [ "$is_help" == true ]; then
+    usage
+    exit 0
+  fi
+}
+
 validate_numbers() {
   validate_number $1
   validate_number $2
@@ -29,13 +43,17 @@ validate_numbers() {
 validate_number() {
   local int_regexp='^[-+]?[0-9]+(\.0)?$'
   if ! [[ $1 =~ $int_regexp ]] ; then
-    echo "[ERROR]: niepoprawna wartosc: $1 powinna to byc liczba calkowita!" >&2; exit 1
+    echo "[ERROR]: niepoprawna wartosc: $1 powinna to byc liczba calkowita!" >&2
+    usage
+    exit 1
   fi
 }
 validate_operator() {
   local operator=$(get_operator $1)
   if [ $operator == $UNKNOWN ]; then
-    echo "[ERROR]: niepoprawna wartosc operatora: $1" >&2; exit 1
+    echo "[ERROR]: niepoprawna wartosc operatora: $1" >&2
+    usage
+    exit 1
   fi
 }
 get_operator() {
@@ -99,6 +117,7 @@ do_mathematical_operation() {
 # #################################
 # executions
 # #################################
+validate_usage $@
 validate_numbers $1 $3
 num_1=$(get_number $1)
 num_2=$(get_number $3)

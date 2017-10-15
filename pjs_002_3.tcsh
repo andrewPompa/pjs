@@ -34,8 +34,7 @@ set n = `echo $1 | wc -c`
 @ n--
 # $n
 if ( $cond != $n ) then
-  # echo "[ERROR]: niepoprawna wartosc: $1 powinna to byc liczba calkowita!" >&2
-  echo "Blad"
+  echo "[ERROR]: niepoprawna wartosc: $1 powinna to byc liczba calkowita!"
   echo "Wykonuje operacje na liczbach calkowitych"
   echo "Uzycie"
   echo "$0 n1 o n2"
@@ -52,8 +51,7 @@ set cond = `expr $3 : '^[+-]*[0-9][0-9]*$'`
 set n = `echo $2 | wc -c`
 @ n--
 if ! ( $cond != $n ) then
-  # echo "[ERROR]: niepoprawna wartosc: $3 powinna to byc liczba calkowita!" >&2
-  echo "Blad"
+  echo "[ERROR]: niepoprawna wartosc: $3 powinna to byc liczba calkowita!"
   echo "Wykonuje operacje na liczbach calkowitych"
   echo "Uzycie"
   echo "$0 n1 o n2"

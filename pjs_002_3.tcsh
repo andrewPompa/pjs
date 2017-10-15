@@ -68,7 +68,7 @@ if ! ( $cond != $n ) then
 endif
 # validate operator
 set is_operator_valid=false
-if  ($2 == $ADD ||  $2 == $SUBTRACT  ||  $2 == $MULTIPLIY  ||  $2 == $DIVIDE || $1 == $POWER)  then
+if  ($2 == $ADD ||  $2 == $SUBTRACT  ||  $2 == $MULTIPLIY  ||  $2 == $DIVIDE || $2 == $POWER)  then
   set is_operator_valid=true
 endif
 
@@ -89,8 +89,12 @@ if  ($is_operator_valid == false) then
 endif
 
 alias sequence_forward "seq $1 $STEP_FORWARD $3"
-alias sequence_backward="seq $1 $STEP_BACKWORD $2"
-set vals=`sequence_forward`
+alias sequence_backward "seq $1 $STEP_BACKWORD $3"
+if ( $1 > $3 ) then
+  set vals=`sequence_backward`
+else
+  set vals=`sequence_forward`
+endif
 set vals_length=$#vals
 set first_line="/"
 foreach i ( $vals )
@@ -101,31 +105,31 @@ echo $first_line
 
 set line
 foreach j ( $vals )
-  set line="$i| "
+  set line="$j| "
   foreach k ( $vals )
     set result
     if ( $2 == $ADD) then
-      # @ result = 10 + 20
+      @ result = $j + $k
     else if ( $2 == $SUBTRACT) then
-      set result='calc exp="($1)-($3)"'
+      @ result = $j - $k
     else if ( $2 ==  $MULTIPLIY) then
-      set result='calc exp="($1)*($3)"'
+      @ result = $j * $k
     else if ( $2 == $DIVIDE) then
-      if ( $3 -eq 0) then
+      if ( $3 == 0) then
         set result="N/A"
       else
-        alias divide_operation 'bc <<< "scale=2;$1/$3"'
+        alias divide_operation 'echo "scale=2;$j/$k" | bc'
         set result=`divide_operation`
       endif
     else if ( $2 == $POWER) then
-      if ( $1 -eq 0 && $3 -lt 0) then
-        set result="N/A"
-      else
-        alias power_operation 'bc <<< "scale=2;$1^$2"'
-        set result=`divide_operation`
-      endif
+     if ( $j == 0 && $k < 0) then
+       set result="N/A"
+     else
+       alias power_operation 'echo "scale=5;$j^$k" | bc'
+       set result=`power_operation`
+     endif
     endif
-    line="$line "
+    set line="$line $result"
   end
   echo $line
 end

@@ -13,7 +13,7 @@ set cond = `expr $name : '^client\..+$'`
 set n = `echo $name | wc -c`
 @ n--
 if ( $cond == $n ) then
-  echo "client"
+  # echo "client"
   set is_client = true
 endif
 
@@ -21,14 +21,14 @@ set cond = `expr $name : '^serwer\..+$'`
 set n = `echo $name | wc -c`
 @ n--
 if ( $cond == $n ) then
-  echo "serwer"
+  # echo "serwer"
   set is_server = true
 endif
 
 set counter=1
 while ($#argv >= $counter)
   set var = $argv[$counter]
-  echo "$var $counter"
+  # echo "$var $counter"
 
    if ("$argv[$counter]" == '-h' || "$argv[$counter]" == '--help') then
     echo "Program działający w trybie serwer lub klient, serwer - zlicza liczbę swoich wywołań, klient otrzymuje tą liczbe"
@@ -87,8 +87,6 @@ while ($#argv >= $counter)
         exit 1
       endif
     end
-  else if ($var == '-q') then
-    echo "is q"
   endif
 
   @ counter++
@@ -101,10 +99,9 @@ if ( "$is_client" == true && "$is_server" == true) then
   exit 0
 endif
 
-echo "is_help: $is_help, cli: $is_client, ser: $is_server, ip: $ip, port: $port, is netcat-openbsd: $is_nc_openbsd"
+# echo "is_help: $is_help, cli: $is_client, ser: $is_server, ip: $ip, port: $port, is netcat-openbsd: $is_nc_openbsd"
 
 set result = `nc -vv |& cat | grep -o "netcat-openbsd"`
-echo $result
 if  ($result == "netcat-openbsd") then
   set is_nc_openbsd = true
 else
@@ -140,6 +137,6 @@ endif
 
 if ( $is_client == true ) then
 	echo "This is a client:"
-	set varro = `nc $ip $port `
-	echo "response was:" $varro
+	set result_client = `nc $ip $port `
+	echo "response was:" $result_client
 endif

@@ -124,7 +124,11 @@ start_server() {
     fi
     echo $(get_server_counter_from_rc_file)
     local counter=$(get_server_counter_from_rc_file)
-    $(echo $counter | nc -v -l "$ip" $port)
+    if [[ $is_nc_openbsd == true ]]; then
+      $(echo $counter | nc -v -l "$ip" $port)
+    else
+      $(echo "$counter" | nc -v -q 1 -l "$ip" -p $port)
+    fi
     counter=$(($counter + 1))
     set_server_counter_from_rc_file $counter
   done

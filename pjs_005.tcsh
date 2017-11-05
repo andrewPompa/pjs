@@ -1,11 +1,29 @@
 #!/bin/csh -f
 #jazowski_michal grupa 2
-set is_help=false
-set is_client=false
-set is_server=false
+set is_help = false
+set is_client = false
+set is_server = false
 set port=12345
 set ip="127.0.0.1"
 set is_nc_openbsd = true
+
+
+set name=`basename $0`
+set cond = `expr $name : '^client\..+$'`
+set n = `echo $name | wc -c`
+@ n--
+if ( $cond == $n ) then
+  echo "client"
+  set is_client = true
+endif
+
+set cond = `expr $name : '^serwer\..+$'`
+set n = `echo $name | wc -c`
+@ n--
+if ( $cond == $n ) then
+  echo "serwer"
+  set is_server = true
+endif
 
 set counter=1
 while ($#argv >= $counter)
@@ -77,4 +95,41 @@ while ($#argv >= $counter)
 
   @ counter++
 end
+if ( "$is_client" == false && "$is_server" == false) then
+  set is_server = true
+endif
+if ( "$is_client" == true && "$is_server" == true) then
+  echo "[ERROR] opcja -c i -s nie może być wywołana jednocześnie, sprawdż $0 -h/--help!"
+  exit 0
+endif
+
 echo "is_help: $is_help, cli: $is_client, ser: $is_server, ip: $ip, port: $port, is netcat-openbsd: $is_nc_openbsd"
+
+if ( $is_server == true ) then
+  if ( -f ${HOME}/.licznik.csh ) then
+  	set counter = `cat ${HOME}/.licznik.csh`
+  else
+  	echo 0 > ${HOME}/.licznik.csh
+    set counter = `cat ${HOME}/.licznik.csh`
+  endif
+
+	echo "Startig server"
+	while (1)
+    alias test_port 'set test_port = ( `nc -w 1 $ip $port |& cat` ); echo $test_port'
+    set test_port_result = `test_port`
+    if ($#test_port_result != 0) then
+      echo "[ERROR]: port w użyciu nie można uruchomić serwera"
+      exit 1
+    endif
+		set var = `echo $counter | nc -l $ip $port`
+    echo $counter
+    @ counter++
+		echo $counter > ${HOME}/.licznik.csh
+	end
+endif
+
+if ( $is_client == true ) then
+	echo "This is a client:"
+	set varro = `nc $ip $port `
+	echo "response was:" $varro
+endif

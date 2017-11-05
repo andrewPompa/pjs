@@ -49,7 +49,6 @@ while ($#argv >= $counter)
     echo "-h/--help pomoc"
     exit 0
   else if ("X$argv[$counter]" == "X-s") then
-      echo "is s"
       set is_server = true
   else if ("X$argv[$counter]" == "X-p") then
     @ counter++
@@ -68,7 +67,6 @@ while ($#argv >= $counter)
   else if ("$argv[$counter]" == '-c') then
       set is_client = true
   else if ($argv[$counter] == '-i') then
-    echo "is i"
     @ counter++
     if ($#argv < $counter) then
       echo "[ERROR]: argument do -i jest wymagany!"
@@ -105,6 +103,14 @@ endif
 
 echo "is_help: $is_help, cli: $is_client, ser: $is_server, ip: $ip, port: $port, is netcat-openbsd: $is_nc_openbsd"
 
+set result = `nc -vv |& cat | grep -o "netcat-openbsd"`
+echo $result
+if  ($result == "netcat-openbsd") then
+  set is_nc_openbsd = true
+else
+  set is_nc_openbsd = false
+endif
+
 if ( $is_server == true ) then
   if ( -f ${HOME}/.licznik.csh ) then
   	set counter = `cat ${HOME}/.licznik.csh`
@@ -121,7 +127,11 @@ if ( $is_server == true ) then
       echo "[ERROR]: port w użyciu nie można uruchomić serwera"
       exit 1
     endif
-		set var = `echo $counter | nc -l $ip $port`
+    if ($is_nc_openbsd == true) then
+        set var = `echo $counter | nc -l $ip $port`
+    else
+        set var = `echo "$counter" | nc -v -q 1 -l $ip -p $port`
+    endif
     echo $counter
     @ counter++
 		echo $counter > ${HOME}/.licznik.csh

@@ -12,43 +12,40 @@
 # mogę zrobić tak $.=0
 # brak opcji - proste cat
 
+use strict;
+use warnings FATAL => 'all';
 use Getopt::Long qw(:config no_ignore_case);
 use feature qw(say);
 
-my $dont_show_me_hash_lines = '';	# option variable with default value (false)
+my $dont_show_me_hash_lines = '';
 my $show_me_all_lines_numbers = '';
-my $show_me_only_no_hash_lines_numbers = '';
-my $show_me_lines_numbers_separtelty_for_file = '';
+my $show_me_only_visible_lines_numbers = '';
+my $show_me_lines_numbers_separately_for_file = '';
 GetOptions (
-'N' => \$dont_show_me_hash_lines, 
-'c' => \$show_me_all_lines_numbers,
-'n' => \$show_me_only_no_hash_lines_numbers,
-'p' => \$show_me_lines_numbers_separtelty_for_file
+    'N' => \$dont_show_me_hash_lines,
+    'c' => \$show_me_all_lines_numbers,
+    'n' => \$show_me_only_visible_lines_numbers,
+    'p' => \$show_me_lines_numbers_separately_for_file
 );
-if ($show_me_all_lines_numbers && $show_me_only_no_hash_lines_numbers) {
-	die("-c i -n nie może być użyta jednocześnie!");
+if ($show_me_all_lines_numbers && $show_me_only_visible_lines_numbers) {
+    die("opcje -c i -n nie mogą być użyte jednocześnie!");
 }
-#say "$show_me_hash_lines" ;
-#say $show_me_all_lines_numbers;
-#say $show_me_only_no_hash_lines_numbers;
-#say $show_me_lines_numbers_separtelty_for_file;
-my $c = 0
-while(<>) { 
-	if ($dont_show_me_hash_lines) {
-		if (!/^#/) {
-			if ($show_me_all_lines_numbers) {
-				print"$.:$_";
-			} else {
-				$.--;
-				print"$_";
-			}
-		} 
-	}
-	else {
-		print"$_";
-	}
-	if ($show_me_lines_numbers_separtelty_for_file) {
-			$.=0 if eof
-	}
-
+my $line_number;
+while (<>) {
+    if ($show_me_all_lines_numbers) {
+        $line_number = $.;
+    }
+    elsif ($show_me_only_visible_lines_numbers && ($dont_show_me_hash_lines && /^#/)) {
+        $.--;
+    }
+    $line_number = $.;
+    if (($dont_show_me_hash_lines && !/^#/) || !$dont_show_me_hash_lines) {
+        if ($show_me_only_visible_lines_numbers || $show_me_all_lines_numbers) {
+            print "$line_number: ";
+        }
+        print "$_";
+    }
+    if ($show_me_lines_numbers_separately_for_file) {
+        $. = 0 if eof;
+    }
 }

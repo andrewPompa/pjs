@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use warnings FATAL => 'all';
-#use strict;
+use strict;
 sub validate_number {
     my @args = @_;
     if (!$args[0]) {
@@ -21,11 +21,6 @@ my $secondNumber;
 $secondNumber = shift;
 validate_number($secondNumber);
 
-if ($firstNumber > $secondNumber) {
-    my $tmp = $secondNumber;
-    $secondNumber = $firstNumber;
-    $firstNumber = $tmp;
-}
 --$firstNumber;
 --$secondNumber;
 
@@ -40,11 +35,15 @@ while ($#ARGV >= 0) {
     while (<$fh>) {
         chomp;
         my @words = split;
-        if ($secondNumber > $#words) {
-            print "\n";
+        if ($firstNumber > $#words) {
+            say STDERR "[ERROR] $my_file linia: $. - nie można pobrać słowa";
             next;
         }
-        print join(' ', $words[$firstNumber], $words[$secondNumber]);
+        if ($secondNumber > $#words) {
+            say STDERR "[ERROR] $my_file linia: $. - nie można pobrać słowa";
+            next;
+        }
+        print "$words[$firstNumber] $words[$secondNumber]";
         print "\n";
     }
 }

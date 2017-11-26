@@ -33,7 +33,7 @@ GetOptions (
 if (!$showBytes && !$showLines && !$showWords && !$showInt && !$showScientificNumber) {
     $noOptionSet = 1;
 }
-
+my $fileCounter = 0;
 while ($#ARGV >= 0) {
     my $myFile = shift;
     my $fh;
@@ -46,7 +46,7 @@ while ($#ARGV >= 0) {
     open($fh, "<", $myFile);
     while (<$fh>) {
         if ($countWithoutHashCharStartingLine && /^#/) {
-            print "line starting with # skipping\n";
+            print "[INFO] $. ($myFile) line starting with # skipping\n";
             next;
         }
 
@@ -65,36 +65,75 @@ while ($#ARGV >= 0) {
             }
         }
 
-
     }
-    $fileInfoMap{$myFile}{bytes} = $bytesInFile;
-    $fileInfoMap{$myFile}{lines} = $linesInFile;
-    $fileInfoMap{$myFile}{words} = $wordsInFile;
-    $fileInfoMap{$myFile}{ints} = $intsInFile;
-    $fileInfoMap{$myFile}{scientificNumbers} = $scientificNumbersInFile;
+    $fileInfoMap{$fileCounter}{name} = $myFile;
+    $fileInfoMap{$fileCounter}{bytes} = $bytesInFile;
+    $fileInfoMap{$fileCounter}{lines} = $linesInFile;
+    $fileInfoMap{$fileCounter}{words} = $wordsInFile;
+    $fileInfoMap{$fileCounter}{ints} = $intsInFile;
+    $fileInfoMap{$fileCounter}{scientificNumbers} = $scientificNumbersInFile;
     $bytesInFile = 0;
     $linesInFile = 0;
     $wordsInFile = 0;
     $intsInFile = 0;
     $scientificNumbersInFile = 0;
+    ++$fileCounter;
+}
+my $shouldCountTotal;
+if (scalar keys %fileInfoMap > 1) {
+    $shouldCountTotal = 1;
+    $fileInfoMap{total}{scientificNumbers} = 0;
+    $fileInfoMap{total}{ints} = 0;
+    $fileInfoMap{total}{words} = 0;
+    $fileInfoMap{total}{lines} = 0;
+    $fileInfoMap{total}{bytes} = 0;
 }
 
-
 for my $fileInfo (keys %fileInfoMap) {
+    if ($fileInfo =~ "total") {
+        next;
+    }
+
     if ($showScientificNumber) {
         print "scientific numbers: $fileInfoMap{$fileInfo}{scientificNumbers}, ";
     }
     if ($showInt) {
         print "ints: $fileInfoMap{$fileInfo}{ints}, ";
     }
-    if ($showWords || $noOptionSet) {
-        print "words: $fileInfoMap{$fileInfo}{words}, ";
-    }
     if ($showLines || $noOptionSet) {
         print "lines: $fileInfoMap{$fileInfo}{lines}, ";
+    }
+    if ($showWords || $noOptionSet) {
+        print "words: $fileInfoMap{$fileInfo}{words}, ";
     }
     if ($showBytes || $noOptionSet) {
         print "bytes: $fileInfoMap{$fileInfo}{bytes}";
     }
-    print " $fileInfo\n";
+    print " $fileInfoMap{$fileInfo}{name}\n";
+
+    if ($shouldCountTotal) {
+        $fileInfoMap{total}{scientificNumbers} += $fileInfoMap{$fileInfo}{scientificNumbers};
+        $fileInfoMap{total}{ints} += $fileInfoMap{$fileInfo}{ints};
+        $fileInfoMap{total}{words} += $fileInfoMap{$fileInfo}{words};
+        $fileInfoMap{total}{lines} += $fileInfoMap{$fileInfo}{lines};
+        $fileInfoMap{total}{bytes} += $fileInfoMap{$fileInfo}{bytes};
+    }
+}
+if ($shouldCountTotal) {
+    if ($showScientificNumber) {
+        print "scientific numbers: $fileInfoMap{total}{scientificNumbers}, ";
+    }
+    if ($showInt) {
+        print "ints: $fileInfoMap{total}{ints}, ";
+    }
+    if ($showLines || $noOptionSet) {
+        print "lines: $fileInfoMap{total}{lines}, ";
+    }
+    if ($showWords || $noOptionSet) {
+        print "words: $fileInfoMap{total}{words}, ";
+    }
+    if ($showBytes || $noOptionSet) {
+        print "bytes: $fileInfoMap{total}{bytes}";
+    }
+    print " total\n";
 }

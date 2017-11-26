@@ -32,7 +32,7 @@ if ($firstNumber > $secondNumber) {
 while ($#ARGV >= 0) {
 	my $my_file = shift;
 	if (!-e $my_file) {
-		say STDERR "[ERROR] Plik nie istnieje!";
+		say STDERR "[ERROR] Plik $my_file nie istnieje!";
 		next;
 	}
 	my $fh;

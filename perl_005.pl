@@ -44,6 +44,11 @@ while ($#ARGV >= 0) {
 			print "\n";
 			next;
 		}
+		if ($firstNumber == $secondNumber) {
+			print $words[$firstNumber];
+			print "\n";
+			next;
+		}
 		print join(' ', $words[$firstNumber], $words[$secondNumber]);
 		print "\n";
 	}

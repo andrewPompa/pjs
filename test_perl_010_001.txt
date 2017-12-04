@@ -1,0 +1,9 @@
+Karol Farbaniec 4-
+Mateusz Karpik 5
+andrzej POMPA -2
+ANDRZEJ POMPA +5
+Mateusz Karpik 4.156561
+karol FaRbaNiEc 4
+Mateusz Karpik 5+
+Karol Farbaniec 4.75
+Mateusz Karpik -3.75

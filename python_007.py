@@ -12,6 +12,8 @@ import re
 import NumberValidator
 import sys
 
+from GrepModule import PatternOccurrences, calculate_occurrences
+
 program_name = sys.argv[0]
 
 
@@ -69,6 +71,17 @@ while sys.argv:
     phrases.append(argument)
 append_directories_to_search(paths, phrases, directories_to_search)
 
+# for directory in directories_to_search:
+#     print(directory.path),
+#     print(directory.phrases)
+patterns = {}
+for pattern_id, phrase in enumerate(phrases):
+    patterns[phrase + str(pattern_id)] = PatternOccurrences(phrase)
 for directory in directories_to_search:
-    print(directory.path),
-    print(directory.phrases)
+    # print("searching in %s" % directory.path)
+    for root, dirs, files in os.walk(directory.path):
+        for file_name in files:
+            # print("File: %s" % file_name)
+            calculate_occurrences(root + '/' + file_name, patterns)
+for key in patterns:
+    print("%s wystąpił %d razy" % (patterns[key].pattern, patterns[key].occurrences))

@@ -72,18 +72,3 @@ append_directories_to_search(paths, phrases, directories_to_search)
 for directory in directories_to_search:
     print(directory.path),
     print(directory.phrases)
-# sys.argv.pop(0)
-# print(sys.argv)
-# dirs = []
-# gathering_dirs = 1
-# gathering_phrases = 0
-# for argument in sys.argv[2:]:
-#     if argument == "-h":
-#         print_help()
-#         sys.exit(1)
-#     if argument == "-d":
-#         gathering_dirs = 1
-#         gathering_phrases = 0
-#
-#     if argument == "-d":
-#         sys.argv.next()

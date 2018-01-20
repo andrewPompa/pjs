@@ -37,7 +37,9 @@ def is_option(is_option_argument):
            is_option_argument == v or \
            is_option_argument == f
 
-# funkcja wykonana przez Thomas (https://stackoverflow.com/questions/1446549/how-to-identify-binary-and-text-files-using-python)
+
+# funkcja wykonana przez Thomas
+# (https://stackoverflow.com/questions/1446549/how-to-identify-binary-and-text-files-using-python)
 def is_text(filename):
     s = open(filename).read(512)
     text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))

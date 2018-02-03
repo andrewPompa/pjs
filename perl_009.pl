@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+use lib qw(./);
 require NumberValidator;
 
 use strict;

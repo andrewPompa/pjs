@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 use strict;
-use lib qw(./);
 use warnings FATAL => 'all';
 
 sub can_use_lib {
@@ -14,14 +13,19 @@ sub can_use_lib {
 }
 my $lib_name = 'YAML::XS';
 my $configuration_file;
-my $search_all_directories = 1;
-
 if (!can_use_lib($lib_name)) {
     die("[ERROR] Nie można odnaleźć biblioteki '$lib_name' jest niezbędna do poprawnego działania programu\n");
     exit 2;
 }
 use YAML::XS;
 
+$lib_name = 'DateTime';
+#$lib_name = 'YAML::XS';
+if (!can_use_lib($lib_name)) {
+    say STDERR("[ERROR] Nie można odnaleźć biblioteki '$lib_name' jest niezbędna do poprawnego działania programu, użyj:\nperl -MCPAN -e 'install Bundle::DateTime::Complete'");
+    exit 2;
+}
+use lib qw(./);
 if (!can_use_lib("ssh_file_reader_module")) {
     die("[ERROR] Nie można odnaleźć biblioteki 'ssh_file_reader_module' moduł powinien znajdować się w katalogu ze skryptem\n");
     exit 2;
@@ -29,7 +33,7 @@ if (!can_use_lib("ssh_file_reader_module")) {
 use ssh_file_reader_module;
 
 sub show_help {
-    print "Skrypt zbiera adresy z logów ssh, z których nastąpiła próba zalogowania na serwer\n";
+    print "Skrypt zbiera adresy z logów systemowych ssh(/var/log/auth.log*), z których nastąpiła próba zalogowania na serwer\n";
     print "Na postawie adresów określane są dane takie jak:\n";
     print "- Login na który nastąpiła próba zalogowania\n";
     print "- Ostatnia próba logowania\n";
@@ -96,4 +100,8 @@ if (is_help_option()) {
 }
 validate_configuration();
 validate_date_option();
-my %date_rages = ssh_file_reader_module::convert_date_argument_to_date_ranges($ARGV[2]);
+my @date_rages = ssh_file_reader_module::convert_date_argument_to_date_ranges($ARGV[2]);
+print "$#date_rages\n";
+foreach my $x (@date_rages) {
+    print "$x->{range_1}, $x->{range_2}\n";
+}

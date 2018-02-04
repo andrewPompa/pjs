@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 package ssh_file_reader_module;
 use strict;
+use DateTime qw();
 use warnings FATAL => 'all';
 
 sub is_date_argument_valid {
@@ -28,8 +29,79 @@ sub is_date_argument_valid {
 }
 
 sub convert_date_argument_to_date_ranges {
-    my $date_string = 0;
-    return 0;
+    my $date_string = $_[0];
+    my @ranges;
+    my @date_arguments = split(/,/, $date_string);
+    for my $date (@date_arguments) {
+        if ($date =~ /.*;.*/) {
+            my @date_ranges = split(/;/, $date);
+            my $range = get_date_range_from_string_arguments($date_ranges[0], $date_ranges[1]);
+            push(@ranges, $range);
+            next;
+        }
+        my $range = get_date_range_string_argument($date);
+        push(@ranges, $range);
+    }
+    return @ranges;
+}
+sub get_date_range_from_string_arguments {
+    my $string_range_1 = shift;
+    my $string_range_2 = shift;
+    my $range_1;
+    my $range_2;
+
+    my @date_time = split(/ /, $string_range_1);
+    if ($#date_time == 1) {
+        $range_1 = get_full_date($date_time[0], $date_time[1]);
+    } else {
+       $range_1 = get_full_date($date_time[0], "00:00:00");
+    }
+    @date_time = split(/ /, $string_range_2);
+    if ($#date_time == 1) {
+        $range_2 = get_full_date($date_time[0], $date_time[1]);
+    } else {
+        $range_1 = get_full_date($date_time[0], "23:59:59");
+    }
+    return {range_1 => $range_1, range_2 => $range_2};
+}
+sub get_date_range_string_argument {
+    my $string_range = shift;
+    my $range_1;
+    my $range_2;
+
+    my @date_time = split(/ /, $string_range);
+    if ($#date_time == 1) {
+        print "[WARN] Przedział jest podany z dokładną datą i zostanie sprawdzona tylko jedna sekunda!\n";
+        print "[WARN] Czy to pożądane użycie? Rozważ użycie daty w formacie yyyy-mm-dd dla przeszukania jednego dnia\n";
+        $range_1 = get_full_date($date_time[0], $date_time[1]);
+        $range_2 = get_full_date($date_time[0], $date_time[1]);
+    } else {
+       $range_1 = get_full_date($date_time[0], "00:00:00");
+       $range_2 = get_full_date($date_time[0], "23:59:59");
+    }
+    return {range_1 => $range_1, range_2 => $range_2};
+}
+sub get_full_date {
+    my $date_to_split = shift;
+    my $time_to_split = shift;
+    my @date = split(/-/, $date_to_split);
+#    if ($#date_time == 1) {
+        my @time = split(/:/, $time_to_split);
+        my $to_return = DateTime->new(
+            year    => $date[0],
+            month   => $date[1],
+            day     => $date[2]
+        );
+        $to_return -> set_hour($time[0]);
+        $to_return -> set_minute($time[1]);
+        $to_return -> set_second($time[2]);
+        return $to_return;
+#    }
+#    return DateTime->new(
+#        year  => $date[0],
+#        month => $date[1],
+#        day   => $date[2]
+#    );
 }
 
 1;

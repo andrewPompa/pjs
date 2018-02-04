@@ -1,0 +1,5 @@
+database:
+    url: https://pjs-is-cool.firebaseio.com/
+    user:
+        e-mail: mijo@ailleron.com
+        password: topsecret

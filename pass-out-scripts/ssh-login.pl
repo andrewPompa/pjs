@@ -3,12 +3,17 @@ use strict;
 use warnings FATAL => 'all';
 use IO::Uncompress::Gunzip qw($GunzipError);
 use File::stat;
+use JSON qw(decode_json);
+#very important!!!
+#sudo perl -MCPAN -e 'install JSON'
 
 my $lib_name = 'YAML::XS';
 my $configuration_file;
 my $auth_log_path = "/home/mijo/Desktop/auth-log/*";
 my %auth_files;
 #my $auth_log_path = "/var/log/auth.log*";
+
+
 
 sub can_use_lib {
     eval("use $_[0]");
@@ -38,7 +43,8 @@ if (!can_use_lib("ssh_file_reader_module")) {
     exit 2;
 }
 use ssh_file_reader_module;
-
+use REST::Client;
+add_localization_data();
 sub show_help {
     print "Skrypt zbiera adresy z logów systemowych ssh(/var/log/auth.log*), z których nastąpiła próba zalogowania na serwer\n";
     print "Na postawie adresów określane są dane takie jak:\n";
@@ -198,18 +204,28 @@ sub read_file {
             my $timestamp = $datetime->epoch();
             if (defined $2) {
                 $users{$timestamp}{user} = $2;
-            } else {
+            }
+            else {
                 $users{$timestamp}{user} = 'not_found';
             }
             $users{$timestamp}{ip} = $1;
             $users{$timestamp}{result} = 'failure';
-#            print "$timestamp, $users{$timestamp}{user}, $users{$timestamp}{ip}\n";
+            #            print "$timestamp, $users{$timestamp}{user}, $users{$timestamp}{ip}\n";
 
         }
     }
     return %users;
 }
-
+sub add_localization_data {
+    my $ip = shift;
+    my $country;
+    my $city;
+    my $zip_code;
+    my $client = REST::Client->new();
+    $client->GET("http://freegeoip.net/json/$ip");
+    my $decoded = decode_json($client->responseContent());
+    return {country_name => $decoded->{$country}, $decoded->{city => $city}, zip_code => $decoded->{$zip_code}};
+}
 if (is_help_option()) {
     show_help();
     exit 1;
@@ -236,8 +252,11 @@ foreach my $date_range (@date_rages) {
         }
     }
 }
+#add_localization_data(\%users);
 for my $timestamp (keys %users) {
-    print "$users{$timestamp}{user}\n";
+    my %localization_data = add_localization_data($users{$timestamp}{ip});
+#    todo: add info and save on server
+#    print "$users{$timestamp}{user}\n";
 }
 #1517443200 | 1518333904
 #1517443200 | 1518220803

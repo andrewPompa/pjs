@@ -1,6 +1,14 @@
 #!/usr/bin/perl
 use strict;
 use warnings FATAL => 'all';
+use IO::Uncompress::Gunzip qw($GunzipError);
+use File::stat;
+
+my $lib_name = 'YAML::XS';
+my $configuration_file;
+my $auth_log_path = "/home/mijo/Desktop/auth-log/*";
+my %auth_files;
+#my $auth_log_path = "/var/log/auth.log*";
 
 sub can_use_lib {
     eval("use $_[0]");
@@ -11,8 +19,7 @@ sub can_use_lib {
         return(1);
     }
 }
-my $lib_name = 'YAML::XS';
-my $configuration_file;
+
 if (!can_use_lib($lib_name)) {
     die("[ERROR] Nie można odnaleźć biblioteki '$lib_name' jest niezbędna do poprawnego działania programu\n");
     exit 2;
@@ -58,18 +65,18 @@ sub is_help_option() {
     return 0;
 }
 sub validate_configuration {
-    if ($#ARGV == -1) {
+    if ($#ARGV == - 1) {
         say STDERR("[ERROR] Proszę podać plik konfiguracji!");
         show_help
-        exit 2
+            exit 2
     }
     if (!-e $ARGV[0]) {
         say STDERR("[ERROR] Proszę podać plik konfiguracji!");
         show_help
-        exit 2
+            exit 2
     }
     $configuration_file = YAML::XS::LoadFile($ARGV[0]);
-#    $configuration_file->{database}{url}
+    #    $configuration_file->{database}{url}
 }
 sub validate_date_option {
     if ($#ARGV == 1) {
@@ -94,6 +101,58 @@ sub validate_date_option {
         exit 2;
     }
 }
+sub prepare_auth_files() {
+    my @files = glob($auth_log_path);
+
+    foreach my $file_name (@files) {
+        if (!-r $file_name) {
+            say STDERR "[ERROR] Plik $file_name nie może zostać odczytany!";
+            next;
+        }
+        read_file($file_name);
+    }
+    for my $file (keys %auth_files) {
+        print "$auth_files{$file}{start_datetime}\n";
+    }
+}
+sub read_file() {
+    my $file_name = shift;
+    my $file_handler;
+    my $first_date;
+    my $last_date;
+    my $is_first_line = 1;
+    if ($file_name =~ /.*\.gz$/) {
+        $file_handler = IO::Uncompress::Gunzip->new($file_name)
+    }
+    else {
+        open($file_handler, "<", $file_name);
+    }
+    print "reading file: $file_name\n";
+    while (<$file_handler>) {
+        if ($_ !~ /^\w+ \w+ \w+.*$/) {
+            next;
+        }
+        if ($is_first_line) {
+            $is_first_line = 0;
+            $first_date = $_;
+        }
+        $last_date = $_;
+    }
+    $first_date =~ /(\w+ \w+ \d\d:\d\d:\d\d)/;
+    $first_date = $1;
+    $last_date =~ /(\w+ \w+ \d\d:\d\d:\d\d)/;
+    $last_date = $1;
+    my $file_stats = stat($file_name);
+    my $year = ssh_file_reader_module::get_year_from_epoch_time($file_stats->mtime);
+    my $start_datetime =
+        ssh_file_reader_module::get_date_from_string_pattern("$year $first_date", '%Y %b %d %H:%M:%S');
+    my $end_datetime =
+        ssh_file_reader_module::get_date_from_string_pattern("$year $last_date", '%Y %b %d %H:%M:%S');
+    #    print "$start_datetime, $end_datetime\n";
+    $auth_files{$file_name}{start_datetime} = $start_datetime;
+    $auth_files{$file_name}{end_datetime} = $end_datetime;
+
+}
 if (is_help_option()) {
     show_help();
     exit 1;
@@ -101,7 +160,8 @@ if (is_help_option()) {
 validate_configuration();
 validate_date_option();
 my @date_rages = ssh_file_reader_module::convert_date_argument_to_date_ranges($ARGV[2]);
-print "$#date_rages\n";
-foreach my $x (@date_rages) {
-    print "$x->{range_1}, $x->{range_2}\n";
+prepare_auth_files();
+foreach my $date_range (@date_rages) {
+    #    print $date_range->{range_1}," ",$date_range->{range_1}->epoch(),"\n";
+    #    print "$x->{range_1}, $x->{range_2}\n";
 }

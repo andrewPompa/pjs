@@ -2,6 +2,7 @@
 package ssh_file_reader_module;
 use strict;
 use DateTime qw();
+use DateTime::Format::Strptime;
 use warnings FATAL => 'all';
 
 sub is_date_argument_valid {
@@ -71,8 +72,8 @@ sub get_date_range_string_argument {
 
     my @date_time = split(/ /, $string_range);
     if ($#date_time == 1) {
-        print "[WARN] Przedział jest podany z dokładną datą i zostanie sprawdzona tylko jedna sekunda!\n";
-        print "[WARN] Czy to pożądane użycie? Rozważ użycie daty w formacie yyyy-mm-dd dla przeszukania jednego dnia\n";
+        print "[WARN]\tPrzedział $string_range jest podany z dokładną datą i zostanie sprawdzona tylko jedna sekunda!\n";
+        print "\tCzy to pożądane użycie? Rozważ podanie argumentu w formacie yyyy-mm-dd dla przeszukania całego dnia\n";
         $range_1 = get_full_date($date_time[0], $date_time[1]);
         $range_2 = get_full_date($date_time[0], $date_time[1]);
     } else {
@@ -103,5 +104,17 @@ sub get_full_date {
 #        day   => $date[2]
 #    );
 }
-
+sub get_date_from_string_pattern {
+    my $date = shift;
+    my $pattern = shift;
+#    print "$date, $pattern\n";
+    my $parser = DateTime::Format::Strptime->new( pattern => $pattern );
+    my $dt = $parser->parse_datetime( $date );
+    return $dt;
+}
+sub get_year_from_epoch_time {
+    my $epoch_time = shift;
+    my $to_return = DateTime->from_epoch(epoch => $epoch_time);
+    return $to_return->year();
+}
 1;

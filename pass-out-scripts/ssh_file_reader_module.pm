@@ -63,6 +63,12 @@ sub get_date_range_from_string_arguments {
     } else {
         $range_1 = get_full_date($date_time[0], "23:59:59");
     }
+    if ($range_1 -> epoch() > $range_2 -> epoch()) {
+        print "$range_1 is bigger than $range_2\n";
+        my $tmp = $range_2;
+        $range_2 = $range_1;
+        $range_1 = $tmp;
+    }
     return {range_1 => $range_1, range_2 => $range_2};
 }
 sub get_date_range_string_argument {

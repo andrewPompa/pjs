@@ -295,13 +295,11 @@ foreach my $date_range (@date_rages) {
         }
     }
 }
-#add_localization_data(\%users);
 for my $timestamp (keys %users) {
     my $localization_data = add_localization_data($users{$timestamp}{ip});
     $users{$timestamp}{country_name} = $localization_data->{country_name};
     $users{$timestamp}{city} = $localization_data->{city};
     $users{$timestamp}{zip_code} = $localization_data->{zip_code};
-    #    todo: add info and save on server
     #    print "$users{$timestamp}{city}\n";
 }
 send_users_to_firebase(\%users);

@@ -11,9 +11,8 @@ my $lib_name = 'YAML::XS';
 my $configuration_file;
 my $auth_log_path = "/home/mijo/Desktop/auth-log/*";
 my %auth_files;
+my $api_token;
 #my $auth_log_path = "/var/log/auth.log*";
-
-
 
 sub can_use_lib {
     eval("use $_[0]");
@@ -40,6 +39,10 @@ if (!can_use_lib($lib_name)) {
 use lib qw(./);
 if (!can_use_lib("ssh_file_reader_module")) {
     die("[ERROR] Nie można odnaleźć biblioteki 'ssh_file_reader_module' moduł powinien znajdować się w katalogu ze skryptem\n");
+    exit 2;
+}
+if (!can_use_lib("Firebase")) {
+    die("[ERROR] Nie można odnaleźć biblioteki 'Firebase' użyj:\nperl -MCPAN -e shell\ninstall Firebase\n");
     exit 2;
 }
 use ssh_file_reader_module;
@@ -192,13 +195,13 @@ sub read_file {
         if ($_ =~ /Accepted \w+ for \w+ from.*$/) {
             $_ =~ /^.*for (\w+) from (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*$/;
             my $timestamp = $datetime->epoch();
-#            print "$timestamp, $1, $2\n";
+            #            print "$timestamp, $1, $2\n";
             $users{$timestamp}{user} = $1;
             $users{$timestamp}{ip} = $2;
             $users{$timestamp}{result} = 'accepted';
         }
         else {
-#            print "line: $_\n";
+            #            print "line: $_\n";
             $_ =~ /^.*rhost=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+user=(\w+).*$/;
             my $timestamp = $datetime->epoch();
             if (defined $2) {
@@ -219,19 +222,59 @@ sub add_localization_data {
     my $ip = shift;
     my $client = REST::Client->new();
     $client->GET("http://freegeoip.net/json/$ip");
-#    print $client->responseCode, "\n";
+    #    print $client->responseCode, "\n";
     if ($client->responseCode() != 200) {
-        return {country_name => "not_found", city => "not_found", zip_code => "not_found"};
+        return { country_name => "not_found", city => "not_found", zip_code => "not_found" };
     }
     my $decoded = decode_json($client->responseContent());
-    return {country_name => $decoded->{country}, city => $decoded->{city}, zip_code => $decoded->{zip_code}};
+    return { country_name => $decoded->{country_name}, city => $decoded->{city}, zip_code => $decoded->{zip_code} };
 }
+sub get_firebase_token {
+    my $client = REST::Client->new();
+    print "$configuration_file->{database}{key}\n";
+    print "$configuration_file->{database}{user}{email}\n";
+    print "$configuration_file->{database}{user}{password}\n";
+    $client->POST(
+        "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=$configuration_file->{database}{key}",
+        "{
+            \"email\": \"$configuration_file->{database}{user}{email}\",
+	        \"password\": \"$configuration_file->{database}{user}{password}\",
+	        \"returnSecureToken\": true
+        }",
+        { "Content-type" => 'application/json' }
+    );
+    if ($client->responseCode() != 200) {
+        say STDERR("[ERROR] Nieporawne dane! Nie można pobrać tokenu dostępowego");
+        exit 2;
+    }
+    my $decoded = decode_json($client->responseContent());
+    return $decoded->{idToken};
+}
+sub send_users_to_firebase {
+    my $params = shift;
+    my %users = %$params;
+    my $client = REST::Client->new();
+    $client->POST(
+        "$configuration_file->{database}{url}?auth=$api_token",
+        JSON::XS::encode_json(\%users),
+        { "Content-type" => 'application/json' }
+    );
+    if ($client->responseCode() != 200) {
+        say STDERR("[ERROR] Coś poszło nie tak podczas wysyłania danych, odpowiedź: " + $client->responseContent());
+        exit 2;
+    }
+
+}
+#-------------------------------------
+#------------ | EXECUTION | ----------
+#-------------------------------------
 if (is_help_option()) {
     show_help();
     exit 1;
 }
 validate_configuration();
 validate_date_option();
+$api_token = get_firebase_token();
 my @date_rages = ssh_file_reader_module::convert_date_argument_to_date_ranges($ARGV[2]);
 prepare_auth_files();
 my %users;
@@ -258,11 +301,7 @@ for my $timestamp (keys %users) {
     $users{$timestamp}{country_name} = $localization_data->{country_name};
     $users{$timestamp}{city} = $localization_data->{city};
     $users{$timestamp}{zip_code} = $localization_data->{zip_code};
-#    todo: add info and save on server
-#    print "$users{$timestamp}{city}\n";
+    #    todo: add info and save on server
+    #    print "$users{$timestamp}{city}\n";
 }
-#1517443200 | 1518333904
-#1517443200 | 1518220803
-#1517443200 | 1517124303 | 1517443158
-#1517443200 | 1516605905
-#1517443200 | 1515914706
+send_users_to_firebase(\%users);

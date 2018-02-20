@@ -1,5 +1,6 @@
 database:
-    url: https://pjs-is-cool.firebaseio.com/
+    url: https://pjs-is-cool.firebaseio.com/data.json
+    key: AIzaSyBgLMKwyG5zrFCL5o-IBuigDpCFhjF3l8g
     user:
-        e-mail: mijo@ailleron.com
-        password: topsecret
+        email: adres@test.pl
+        password: testtest

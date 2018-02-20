@@ -44,7 +44,6 @@ if (!can_use_lib("ssh_file_reader_module")) {
 }
 use ssh_file_reader_module;
 use REST::Client;
-add_localization_data();
 sub show_help {
     print "Skrypt zbiera adresy z logów systemowych ssh(/var/log/auth.log*), z których nastąpiła próba zalogowania na serwer\n";
     print "Na postawie adresów określane są dane takie jak:\n";
@@ -193,13 +192,13 @@ sub read_file {
         if ($_ =~ /Accepted \w+ for \w+ from.*$/) {
             $_ =~ /^.*for (\w+) from (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*$/;
             my $timestamp = $datetime->epoch();
-            print "$timestamp, $1, $2\n";
+#            print "$timestamp, $1, $2\n";
             $users{$timestamp}{user} = $1;
             $users{$timestamp}{ip} = $2;
             $users{$timestamp}{result} = 'accepted';
         }
         else {
-            print "line: $_\n";
+#            print "line: $_\n";
             $_ =~ /^.*rhost=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+user=(\w+).*$/;
             my $timestamp = $datetime->epoch();
             if (defined $2) {
@@ -218,13 +217,14 @@ sub read_file {
 }
 sub add_localization_data {
     my $ip = shift;
-    my $country;
-    my $city;
-    my $zip_code;
     my $client = REST::Client->new();
     $client->GET("http://freegeoip.net/json/$ip");
+#    print $client->responseCode, "\n";
+    if ($client->responseCode() != 200) {
+        return {country_name => "not_found", city => "not_found", zip_code => "not_found"};
+    }
     my $decoded = decode_json($client->responseContent());
-    return {country_name => $decoded->{$country}, $decoded->{city => $city}, zip_code => $decoded->{$zip_code}};
+    return {country_name => $decoded->{country}, city => $decoded->{city}, zip_code => $decoded->{zip_code}};
 }
 if (is_help_option()) {
     show_help();
@@ -254,9 +254,12 @@ foreach my $date_range (@date_rages) {
 }
 #add_localization_data(\%users);
 for my $timestamp (keys %users) {
-    my %localization_data = add_localization_data($users{$timestamp}{ip});
+    my $localization_data = add_localization_data($users{$timestamp}{ip});
+    $users{$timestamp}{country_name} = $localization_data->{country_name};
+    $users{$timestamp}{city} = $localization_data->{city};
+    $users{$timestamp}{zip_code} = $localization_data->{zip_code};
 #    todo: add info and save on server
-#    print "$users{$timestamp}{user}\n";
+#    print "$users{$timestamp}{city}\n";
 }
 #1517443200 | 1518333904
 #1517443200 | 1518220803

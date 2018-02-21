@@ -132,7 +132,7 @@ sub get_auth_file_info() {
     else {
         open($file_handler, "<", $file_name);
     }
-    print "reading file: $file_name\n";
+#    print "reading file: $file_name\n";
     while (<$file_handler>) {
         if ($is_first_line && $_ =~ /(\w{3}\s+\w+ \d\d:\d\d:\d\d)/) {
             $is_first_line = 0;
@@ -151,7 +151,7 @@ sub get_auth_file_info() {
         ssh_file_reader_module::get_date_from_string_pattern("$year $first_date", '%Y %b %d %H:%M:%S');
     my $end_datetime =
         ssh_file_reader_module::get_date_from_string_pattern("$year $last_date", '%Y %b %d %H:%M:%S');
-    print "$start_datetime, $end_datetime\n";
+#    print "$start_datetime, $end_datetime\n";
     $auth_files{$file_name}{name} = $file_name;
     $auth_files{$file_name}{start_datetime} = $start_datetime;
     $auth_files{$file_name}{end_datetime} = $end_datetime;
@@ -189,7 +189,7 @@ sub read_file {
             next;
         }
         if ($end_date->epoch() < $datetime->epoch()) {
-            print "end of processing $file->{name}\n";
+            print "koniec procesowania $file->{name}\n";
             last;
         }
         if ($_ =~ /Accepted \w+ for \w+ from.*$/) {
@@ -231,9 +231,9 @@ sub add_localization_data {
 }
 sub get_firebase_token {
     my $client = REST::Client->new();
-    print "$configuration_file->{database}{key}\n";
-    print "$configuration_file->{database}{user}{email}\n";
-    print "$configuration_file->{database}{user}{password}\n";
+#    print "$configuration_file->{database}{key}\n";
+#    print "$configuration_file->{database}{user}{email}\n";
+#    print "$configuration_file->{database}{user}{password}\n";
     $client->POST(
         "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=$configuration_file->{database}{key}",
         "{
@@ -279,13 +279,13 @@ my @date_rages = ssh_file_reader_module::convert_date_argument_to_date_ranges($A
 prepare_auth_files();
 my %users;
 foreach my $date_range (@date_rages) {
-    print "date range: ", $date_range->{range_1}->epoch(), " ", $date_range->{range_2}->epoch(), "\n";
+#    print "date range: ", $date_range->{range_1}->epoch(), " ", $date_range->{range_2}->epoch(), "\n";
     for my $file (keys %auth_files) {
         print "$file: ", $auth_files{$file}{start_datetime}->epoch(), " ", $auth_files{$file}{end_datetime}->epoch(),
             "\n";
         if ($date_range->{range_1}->epoch() >= $auth_files{$file}{start_datetime}->epoch() &&
             $date_range->{range_1}->epoch() <= $auth_files{$file}{end_datetime}->epoch()) {
-            print "searching in: $file\n";
+            print "szukam w: $file\n";
             my %users_from_file = read_file($auth_files{$file}, $date_range->{range_1}, $date_range->{range_2});
             for my $timestamp (keys %users_from_file) {
                 $users{$timestamp}{user} = $users_from_file{$timestamp}{user};
@@ -295,6 +295,7 @@ foreach my $date_range (@date_rages) {
         }
     }
 }
+print "dodaję dane lokalizacyjne\n";
 for my $timestamp (keys %users) {
     my $localization_data = add_localization_data($users{$timestamp}{ip});
     $users{$timestamp}{country_name} = $localization_data->{country_name};
@@ -302,4 +303,7 @@ for my $timestamp (keys %users) {
     $users{$timestamp}{zip_code} = $localization_data->{zip_code};
     #    print "$users{$timestamp}{city}\n";
 }
+print "Pobrano dane\n";
+print "Wysyłam do bazy danych...\n";
 send_users_to_firebase(\%users);
+print "Wysłano\n";

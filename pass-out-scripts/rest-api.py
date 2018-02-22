@@ -38,10 +38,18 @@ class LoginInfo:
     def print_info(self):
         str_to_return = "============================\n"
         str_to_return += ("Komputer o IP: %s, z %s(%s), o kodzie: %s, próbował zalogować się na użytkownika: %s\n" %
-              (str(self.ip), str(self.city), str(self.country), str(self.zip_code), str(self.user_to_log)))
+                          (str(self.ip), str(self.city), str(self.country), str(self.zip_code), str(self.user_to_log)))
         for date in self.dates:
-            str_to_return += (date.print_info())
+            str_to_return += (date.print_info(True))
         str_to_return += "============================\n"
+        return str_to_return
+
+    def print_info_by_date(self):
+        str_to_return = ("Komputer o IP: %s, z %s(%s), o kodzie: %s, próbował zalogować się na użytkownika: %s\n" %
+                         (str(self.ip), str(self.city), str(self.country), str(self.zip_code), str(self.user_to_log)))
+        for date in self.dates:
+            str_to_return += (date.print_info(False))
+        str_to_return += "-------------------\n"
         return str_to_return
 
 
@@ -67,9 +75,13 @@ class Date:
         else:
             self.ok_attempts = self.ok_attempts + 1
 
-    def print_info(self):
-        return "W dniu %s, udanych prób zalogowania: %d, nieudanych: %d\n" % \
-               (str(self.date), int(self.ok_attempts), int(self.bad_attempts))
+    def print_info(self, print_date):
+        if print_date is True:
+            return "W dniu %s, udanych prób zalogowania: %d, nieudanych: %d\n" % \
+                   (str(self.date), int(self.ok_attempts), int(self.bad_attempts))
+        else:
+            return "udanych prób zalogowania: %d, nieudanych: %d\n" % \
+                   (int(self.ok_attempts), int(self.bad_attempts))
 
 
 try:
@@ -174,15 +186,53 @@ def find_ip(data, ip):
     return individual
 
 
+def find_date(data, date):
+    ips = []
+    attempts = 0
+    for key in data:
+        for timestamp in data[key]:
+            date_to_compare = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%d-%m-%Y')
+            if date_to_compare == date:
+                ip = get_selected_ip(ips, data[key][timestamp]['ip'])
+                if ip is None:
+                    ips.append(
+                        LoginInfo(data[key][timestamp]['ip'],
+                                  data[key][timestamp]['country_name'],
+                                  data[key][timestamp]['city'],
+                                  data[key][timestamp]['zip_code'],
+                                  data[key][timestamp]['user'])
+                    )
+                else:
+                    attempts += 1
+                    ip.add_date(date_to_compare, data[key][timestamp]['result'])
+    str_to_return = "W dniu %s było %d prób zalogowania\n" % (str(date), int(attempts))
+    for ip in ips:
+        str_to_return += ip.print_info_by_date()
+    return str_to_return
+
+
+def get_selected_ip(ips, ip):
+    for ip_it in ips:
+        if ip == ip_it.ip:
+            return ip_it
+    return None
+
+
 @app.route('/login-info/date/<string:date>', methods=['GET'])
 def get_info_by_date(date):
     try:
-        datetime_object = datetime.datetime.strptime(date, "%d-%m-%Y")
+        datetime.datetime.strptime(date, "%d-%m-%Y")
     except ValueError:
         return make_response(jsonify({'error': 'Niepoprawna składnia'}), 400)
-    print(datetime_object.day)
-    print(datetime_object.time())
-    return ""
+    user_token = get_user_token(data_map['database']['key'],
+                                data_map['database']['user']['email'],
+                                data_map['database']['user']['password'])
+    data = get_data(data_map['database']['url'], user_token)
+    if data is None:
+        return make_response(jsonify({'error': 'Nie można pobrać danych z bazy :('}), 500)
+    info = find_date(data, date)
+
+    return info
 
 
 @app.route('/login-info/ip/<string:ip>', methods=['GET'])

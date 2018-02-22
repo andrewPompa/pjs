@@ -9,6 +9,69 @@ import datetime
 import requests
 from flask import Flask, jsonify, make_response
 
+
+class LoginInfo:
+    ip = ''
+    country = ''
+    city = ''
+    zip_code = ''
+    user_to_log = ''
+    dates = []
+
+    def __init__(self, ip, country, city, zip_code, user_to_log):
+        self.ip = ip
+        self.country = country
+        self.city = city
+        self.zip_code = zip_code
+        self.user_to_log = user_to_log
+        self.dates = []
+
+    def add_date(self, new_date, result):
+        for date in self.dates:
+            if date.date == new_date:
+                # print("adding to exitsting")
+                date.add_attempt(result)
+                return
+        # print("adding new")
+        self.dates.append(Date(new_date, result))
+
+    def print_info(self):
+        str_to_return = "============================\n"
+        str_to_return += ("Komputer o IP: %s, z %s(%s), o kodzie: %s, próbował zalogować się na użytkownika: %s\n" %
+              (str(self.ip), str(self.city), str(self.country), str(self.zip_code), str(self.user_to_log)))
+        for date in self.dates:
+            str_to_return += (date.print_info())
+        str_to_return += "============================\n"
+        return str_to_return
+
+
+class Date:
+    date = ''
+    ok_attempts = 0
+    bad_attempts = 0
+
+    def __init__(self, date, attempt):
+        self.date = date
+        if attempt == "failure":
+            # print("failure")
+            self.ok_attempts = 0
+            self.bad_attempts = 1
+        else:
+            self.ok_attempts = 1
+            self.bad_attempts = 0
+
+    def add_attempt(self, result):
+        if result == "failure":
+            # print("failure")
+            self.bad_attempts = self.bad_attempts + 1
+        else:
+            self.ok_attempts = self.ok_attempts + 1
+
+    def print_info(self):
+        return "W dniu %s, udanych prób zalogowania: %d, nieudanych: %d\n" % \
+               (str(self.date), int(self.ok_attempts), int(self.bad_attempts))
+
+
 try:
     import yaml
 except ImportError as e:
@@ -52,7 +115,6 @@ for argument in sys.argv[1:]:
     elif re.match("\d+", argument):
         port_changed = True
         port = argument
-    print(argument)
 
 # print("-p: %s, p: %s, yaml: %s" % (should_change_port, port_changed, config_file))
 if config_file == "" or \
@@ -61,21 +123,6 @@ if config_file == "" or \
     sys.stderr.write("[ERROR] Niepoprawna składnia\n")
     print_help()
     sys.exit(2)
-
-tasks = [
-    {
-        'id': 1,
-        'title': u'Buy groceries',
-        'description': u'Milk, Cheese, Pizza, Fruit, Tylenol',
-        'done': False
-    },
-    {
-        'id': 2,
-        'title': u'Learn Python',
-        'description': u'Need to find a good Python tutorial on the web',
-        'done': False
-    }
-]
 
 
 def get_user_token(api_key, login, password):
@@ -108,9 +155,23 @@ def get_database_url(database_url, id_token):
 
 
 def find_ip(data, ip):
+    individual = None
     for key in data:
         for timestamp in data[key]:
-            print(data[key][timestamp]['ip'])
+            # print("checking %s with %s" % (ip, data[key][timestamp]['ip']))
+            if data[key][timestamp]['ip'] == ip:
+                # print("got same guy")
+                if individual is None:
+                    # print("initializing")
+                    individual = LoginInfo(ip,
+                                           data[key][timestamp]['country_name'],
+                                           data[key][timestamp]['city'],
+                                           data[key][timestamp]['zip_code'],
+                                           data[key][timestamp]['user'])
+                date = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%d-%m-%Y')
+                # print(date)
+                individual.add_date(date, data[key][timestamp]['result'])
+    return individual
 
 
 @app.route('/login-info/date/<string:date>', methods=['GET'])
@@ -118,25 +179,26 @@ def get_info_by_date(date):
     try:
         datetime_object = datetime.datetime.strptime(date, "%d-%m-%Y")
     except ValueError:
-        return make_response(jsonify({'error': 'Niepoprwana składnia'}), 400)
+        return make_response(jsonify({'error': 'Niepoprawna składnia'}), 400)
     print(datetime_object.day)
     print(datetime_object.time())
-    return jsonify({'tasks': tasks})
+    return ""
 
 
 @app.route('/login-info/ip/<string:ip>', methods=['GET'])
 def get_info_by_ip(ip):
     if not re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
-        return make_response(jsonify({'error': 'Niepoprwana składnia'}), 400)
+        return make_response(jsonify({'error': 'Niepoprawna składnia'}), 400)
     print(ip)
     user_token = get_user_token(data_map['database']['key'],
                                 data_map['database']['user']['email'],
                                 data_map['database']['user']['password'])
     data = get_data(data_map['database']['url'], user_token)
     if data is None:
-        return make_response(jsonify({'error': 'Nie można pobrać danych z bazy'}), 500)
-    find_ip(data, ip)
-    return jsonify({'tasks': tasks})
+        return make_response(jsonify({'error': 'Nie można pobrać danych z bazy :('}), 500)
+    computer = find_ip(data, ip)
+
+    return computer.print_info()
 
 
 data_map = parse_yaml()

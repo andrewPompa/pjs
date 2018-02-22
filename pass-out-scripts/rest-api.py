@@ -106,6 +106,9 @@ def print_help():
     print("\tdatabase.user.email adres e-mail zarejestrowanego w firebase użytkownika")
     print("\tdatabase.user.password hasło zarejestrowanego w firebase użytkownika")
     print("-p port [opcjonalnie] numer portu na którym ma być uruchomione nasze API")
+    print("adresy url:")
+    print("/login-info/date/{date} gdzie {date} to data w formacie dd-mm-yyyy - wyświetla statystyki z dnia")
+    print("/login-info/ip/{ip} wyświetla statystyki dla danego adresu ip")
 
 
 def parse_yaml():
